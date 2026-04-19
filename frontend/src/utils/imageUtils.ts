@@ -60,18 +60,12 @@ export const extractImageUrls = (text: string): string[] => {
 /**
  * Extract single image URL from text safely
  */
-export const extractImageUrl = (text: string | undefined): string => {
-  if (!text || typeof text !== "string") {
-    return "https://source.unsplash.com/600x400/?education";
-  }
-
+export const extractImageUrl = (text: string): string | null => {
+  if (!text) return null;
+  
   const match = text.match(/!\[.*?\]\((.*?)\)/);
-
-  if (match && match[1] && match[1].startsWith("http")) {
-    return match[1];
-  }
-
-  return "https://source.unsplash.com/600x400/?education";
+  
+  return match ? match[1] : null;
 };
 
 /**

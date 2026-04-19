@@ -19,7 +19,7 @@ const EnhancedImageRenderer: React.FC<EnhancedImageRendererProps> = ({ text }) =
   const imageUrl = extractImageUrl(safeResponse);
   
   // If no valid image URL, return null
-  if (!imageUrl || imageUrl === "https://source.unsplash.com/600x400/?education") {
+  if (!imageUrl) {
     return null;
   }
 

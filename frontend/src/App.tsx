@@ -158,22 +158,6 @@ function App() {
     }
   };
 
-  // Safe image extraction function
-  const extractImageUrl = (text: string): string => {
-    if (!text) return "https://source.unsplash.com/600x400/?education";
-    
-    try {
-      const match = text.match(/\!\[.*?\]\((.*?)\)/);
-      if (match && match[1] && match[1].startsWith("http")) {
-        return match[1];
-      }
-    } catch (e) {
-      console.error("Image extraction error:", e);
-    }
-    
-    return "https://source.unsplash.com/600x400/?education";
-  };
-
   const handleQuizMode = () => {
     setShowQuiz(true);
   };

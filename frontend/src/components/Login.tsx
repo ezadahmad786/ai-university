@@ -32,7 +32,23 @@ const Login: React.FC<LoginProps> = ({ onLogin, onToggleMode }) => {
         })
       });
 
-      const data = await response.json();
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
+      // Better JSON parsing with error handling
+      const text = await response.text();
+      console.log("Raw response text:", text);
+      
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error("Invalid JSON response:", text);
+        console.error("JSON parsing error:", error);
+        setError('Server returned invalid response');
+        setIsLoading(false);
+        return;
+      }
 
       if (response.ok) {
         // Store token in localStorage

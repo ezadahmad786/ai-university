@@ -47,7 +47,23 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onToggleMode }) => {
         })
       });
 
-      const data = await response.json();
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
+      // Better JSON parsing with error handling
+      const text = await response.text();
+      console.log("Raw response text:", text);
+      
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error("Invalid JSON response:", text);
+        console.error("JSON parsing error:", error);
+        setError('Server returned invalid response');
+        setIsLoading(false);
+        return;
+      }
 
       if (response.ok) {
         // Auto-login after successful registration
@@ -65,7 +81,21 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onToggleMode }) => {
           })
         });
 
-        const loginData = await loginResponse.json();
+        console.log("Login response status:", loginResponse.status);
+
+        // Better JSON parsing for login response
+        const loginText = await loginResponse.text();
+        console.log("Raw login response text:", loginText);
+        
+        let loginData;
+        try {
+          loginData = JSON.parse(loginText);
+        } catch (error) {
+          console.error("Invalid login JSON response:", loginText);
+          setError('Account created but login failed. Please try logging in.');
+          setIsLoading(false);
+          return;
+        }
 
         if (loginResponse.ok) {
           // Store token in localStorage

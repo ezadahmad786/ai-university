@@ -1031,18 +1031,14 @@ def chat():
                     logger.info(f"=== CLEAN IMAGE GENERATION ===")
                     logger.info(f"Question: {message}")
                     
-                    # Detect if user asks for image/diagram/show/structure
-                    if any(keyword in question_lower for keyword in ["diagram", "image", "show", "structure"]):
-                        # Generate image URL based on user query
-                        image_url = get_image_url(message)
-                        logger.info(f"Generated image URL: {image_url}")
-                        
-                        # Append image to AI response text using Markdown format
-                        final_response = ai_reply + f"\n\n![Image]({image_url})"
-                        logger.info("Added image to response")
+                    # Specific logic for diagram requests
+                    if "diagram" in question_lower:
+                        image_url = "https://source.unsplash.com/600x400/?human-heart,biology"
+                        final_response = ai_reply + f"\n\n![diagram]({image_url})"
+                        logger.info("Added diagram to response")
                     else:
                         final_response = ai_reply
-                        logger.info("No image keywords detected")
+                        logger.info("No diagram keyword detected")
                         
     except Exception as e:
         logger.error(f"Unexpected error in chat endpoint: {e}")

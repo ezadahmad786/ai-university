@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { API_BASE_URL } from './config';
 import MarkdownRenderer from './components/MarkdownRenderer';
+import EnhancedImageRenderer from './components/EnhancedImageRenderer';
 import QuizGenerator from './components/QuizGenerator';
 import Login from './components/Login';
 import Signup from './components/Signup';
@@ -10,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import './components/Quiz.css';
 import './components/Auth.css';
 import './components/Dashboard.css';
+import './components/EnhancedImageRenderer.css';
 
 // Type definitions for our chat messages
 interface Message {
@@ -239,20 +241,10 @@ function App() {
                           <>
                             <MarkdownRenderer content={message.text} />
                             {console.log('Rendering AI message images:', message.images)}
-                            {message.images && message.images.map((img, index) => (
-                              <div key={index} style={{ marginTop: "10px" }}>
-                                <img
-                                  src={`https://source.unsplash.com/600x400/?${img.query}`}
-                                  alt={img.caption}
-                                  style={{
-                                    width: "100%",
-                                    borderRadius: "10px",
-                                    marginTop: "10px"
-                                  }}
-                                />
-                                <p>{img.caption}</p>
-                              </div>
-                            ))}
+                            <EnhancedImageRenderer 
+                              text={message.text} 
+                              backendImages={message.images} 
+                            />
                           </>
                         ) : (
                           <div className="user-text">{message.text}</div>

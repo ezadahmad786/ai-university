@@ -7,43 +7,70 @@
  * Handles both direct URLs, markdown image syntax, and Unsplash URLs
  */
 export const extractImageUrls = (text: string): string[] => {
-  // Regex to match direct image URLs with file extensions
-  const urlRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg))/gi;
-  
-  // Regex to match markdown image syntax with any URL (including Unsplash)
-  const markdownRegex = /!\[.*?\]\((https?:\/\/[^)]+)\)/gi;
-  
-  // Regex to match Unsplash URLs specifically
-  const unsplashRegex = /https?:\/\/source\.unsplash\.com\/[^)\s]+/gi;
-  
-  const urls: string[] = [];
-  
-  // Extract direct URLs
-  const directMatches = text.match(urlRegex);
-  if (directMatches) {
-    urls.push(...directMatches);
+  // Add proper null and type checks
+  if (!text || typeof text !== "string") {
+    return [];
   }
-  
-  // Extract URLs from markdown syntax
-  const markdownMatches = text.match(markdownRegex);
-  if (markdownMatches) {
-    markdownMatches.forEach(match => {
-      // Extract URL from markdown syntax
-      const urlMatch = match.match(/\((https?:\/\/[^)]+)\)/);
-      if (urlMatch && urlMatch[1]) {
-        urls.push(urlMatch[1]);
-      }
-    });
+
+  try {
+    // Regex to match direct image URLs with file extensions
+    const urlRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg))/gi;
+    
+    // Regex to match markdown image syntax with any URL (including Unsplash)
+    const markdownRegex = /!\[.*?\]\((https?:\/\/[^)]+)\)/gi;
+    
+    // Regex to match Unsplash URLs specifically
+    const unsplashRegex = /https?:\/\/source\.unsplash\.com\/[^)\s]+/gi;
+    
+    const urls: string[] = [];
+    
+    // Extract direct URLs
+    const directMatches = text.match(urlRegex);
+    if (directMatches) {
+      urls.push(...directMatches);
+    }
+    
+    // Extract URLs from markdown syntax
+    const markdownMatches = text.match(markdownRegex);
+    if (markdownMatches) {
+      markdownMatches.forEach(match => {
+        // Extract URL from markdown syntax
+        const urlMatch = match.match(/\((https?:\/\/[^)]+)\)/);
+        if (urlMatch && urlMatch[1]) {
+          urls.push(urlMatch[1]);
+        }
+      });
+    }
+    
+    // Extract Unsplash URLs directly
+    const unsplashMatches = text.match(unsplashRegex);
+    if (unsplashMatches) {
+      urls.push(...unsplashMatches);
+    }
+    
+    // Remove duplicates and return
+    return Array.from(new Set(urls));
+  } catch (e) {
+    console.error("Error extracting image URLs:", e);
+    return [];
   }
-  
-  // Extract Unsplash URLs directly
-  const unsplashMatches = text.match(unsplashRegex);
-  if (unsplashMatches) {
-    urls.push(...unsplashMatches);
+};
+
+/**
+ * Extract single image URL from text safely
+ */
+export const extractImageUrl = (text: any): string => {
+  if (!text || typeof text !== "string") {
+    return "https://source.unsplash.com/600x400/?education";
   }
-  
-  // Remove duplicates and return
-  return Array.from(new Set(urls));
+
+  const match = text.match(/!\[.*?\]\((.*?)\)/);
+
+  if (match && match[1] && match[1].startsWith("http")) {
+    return match[1];
+  }
+
+  return "https://source.unsplash.com/600x400/?education";
 };
 
 /**

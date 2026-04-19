@@ -1,103 +1,53 @@
-import React, { useState } from 'react';
-import { extractImageUrls, getSafeImageUrl, getFallbackImageUrl } from '../utils/imageUtils';
+import React from 'react';
 import './EnhancedImageRenderer.css';
-
-interface ImageData {
-  query?: string;
-  caption?: string;
-  url?: string;
-}
 
 interface EnhancedImageRendererProps {
   text: string;
-  backendImages?: ImageData[];
 }
 
-const EnhancedImageRenderer: React.FC<EnhancedImageRendererProps> = ({ 
-  text, 
-  backendImages = [] 
-}) => {
-  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
-  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
-
-  // Extract image URLs from text
-  const extractedUrls = extractImageUrls(text);
+const EnhancedImageRenderer: React.FC<EnhancedImageRendererProps> = ({ text }) => {
+  // Extract image URLs using regex: /\!\[.*?\]\((.*?)\)/
+  const imageRegex = /\!\[.*?\]\((.*?)\)/g;
+  const matches = Array.from(text.matchAll(imageRegex));
   
-  // Combine backend images and extracted URLs
-  const allImages = [
-    ...backendImages.map(img => ({
-      url: `https://source.unsplash.com/600x400/?${img.query}`,
-      caption: img.caption || 'Generated Image',
-      type: 'backend' as const
-    })),
-    ...extractedUrls.map((url, index) => ({
-      url: getSafeImageUrl(url),
-      caption: `Image ${index + 1}`,
-      type: 'extracted' as const
-    }))
-  ].filter(img => img.url); // Filter out invalid URLs
-
-  const handleImageLoad = (index: number) => {
-    setLoadedImages(prev => new Set(prev).add(index));
-  };
-
-  const handleImageError = (index: number) => {
-    setFailedImages(prev => new Set(prev).add(index));
-  };
-
-  const getFallbackUrl = (originalUrl: string): string => {
-    // Try to extract query from original URL for better fallback
-    if (originalUrl.includes('unsplash.com')) {
-      const queryMatch = originalUrl.match(/\?(.+)$/);
-      if (queryMatch && queryMatch[1]) {
-        return getFallbackImageUrl(queryMatch[1]);
-      }
-    }
-    return getFallbackImageUrl('educational-diagram');
-  };
-
-  // If no images, return null
-  if (allImages.length === 0) {
+  // If no images found, return null
+  if (matches.length === 0) {
     return null;
   }
 
+  // Validate and fix URLs
+  const validateAndFixUrl = (url: string): string => {
+    // Remove any surrounding whitespace
+    const cleanUrl = url.trim();
+    
+    // Check if URL starts with https:// and is not empty
+    if (cleanUrl.startsWith('https://') && cleanUrl.length > 8) {
+      return cleanUrl;
+    }
+    
+    // If invalid, replace with fallback
+    return 'https://source.unsplash.com/600x400/?education';
+  };
+
   return (
     <div className="enhanced-image-container">
-      {allImages.map((image, index) => (
-        <div key={`${image.type}-${index}`} className="enhanced-image-wrapper">
-          {!loadedImages.has(index) && !failedImages.has(index) && (
-            <div className="enhanced-image-loading">
-              <div className="enhanced-image-spinner"></div>
-              <span className="enhanced-image-loading-text">
-                Loading image...
-              </span>
-            </div>
-          )}
-          
-          {failedImages.has(index) ? (
+      {matches.map((match, index) => {
+        const imageUrl = validateAndFixUrl(match[1]);
+        
+        return (
+          <div key={index} className="enhanced-image-wrapper">
             <img
-              src={getFallbackUrl(image.url)}
-              alt={`${image.caption} (Fallback)`}
-              className={`enhanced-image loaded fallback`}
-              onLoad={() => handleImageLoad(index)}
+              src={imageUrl}
+              alt="AI Image"
+              className="enhanced-image"
+              onError={(e) => {
+                // Fallback to education image if original fails
+                e.target.src = 'https://source.unsplash.com/600x400/?education';
+              }}
             />
-          ) : (
-            <img
-              src={image.url}
-              alt={image.caption}
-              className={`enhanced-image ${loadedImages.has(index) ? 'loaded' : 'loading'}`}
-              onLoad={() => handleImageLoad(index)}
-              onError={() => handleImageError(index)}
-            />
-          )}
-          
-          {image.caption && loadedImages.has(index) && (
-            <p className="enhanced-image-caption">
-              {image.caption}
-            </p>
-          )}
-        </div>
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 };

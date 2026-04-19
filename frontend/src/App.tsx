@@ -240,11 +240,7 @@ function App() {
                         {message.sender === 'ai' ? (
                           <>
                             <MarkdownRenderer content={message.text} />
-                            {console.log('Rendering AI message images:', message.images)}
-                            <EnhancedImageRenderer 
-                              text={message.text} 
-                              backendImages={message.images} 
-                            />
+                            <EnhancedImageRenderer text={message.text} />
                           </>
                         ) : (
                           <div className="user-text">{message.text}</div>

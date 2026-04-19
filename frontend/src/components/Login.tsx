@@ -18,7 +18,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, onToggleMode }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/login', {
+      const apiUrl = `${import.meta.env.VITE_API_URL}/login`;
+      console.log('API URL for login:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

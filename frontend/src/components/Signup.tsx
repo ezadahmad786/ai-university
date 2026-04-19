@@ -32,7 +32,10 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onToggleMode }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/register', {
+      const apiUrl = `${import.meta.env.VITE_API_URL}/register`;
+      console.log('API URL for registration:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,7 +51,10 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onToggleMode }) => {
 
       if (response.ok) {
         // Auto-login after successful registration
-        const loginResponse = await fetch('http://127.0.0.1:5000/login', {
+        const loginApiUrl = `${import.meta.env.VITE_API_URL}/login`;
+        console.log('API URL for auto-login:', loginApiUrl);
+        
+        const loginResponse = await fetch(loginApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

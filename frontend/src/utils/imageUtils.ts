@@ -59,7 +59,7 @@ export const extractImageUrls = (text: string): string[] => {
 /**
  * Extract single image URL from text safely
  */
-export const extractImageUrl = (text: any): string => {
+export const extractImageUrl = (text: string | undefined): string => {
   if (!text || typeof text !== "string") {
     return "https://source.unsplash.com/600x400/?education";
   }

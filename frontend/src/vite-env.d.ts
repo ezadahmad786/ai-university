@@ -1,9 +1,6 @@
-/// <reference types="vite/client" />
-
-interface ImportMetaEnv {
-  readonly VITE_API_URL: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
+// Environment variable declarations for React
+declare namespace NodeJS {
+  interface ProcessEnv {
+    REACT_APP_API_URL: string;
+  }
 }

@@ -79,7 +79,7 @@ function AppAuth() {
     setInputText('');
 
     try {
-      const API = import.meta.env.VITE_API_URL;
+      const API = process.env.REACT_APP_API_URL;
       console.log("API URL for login:", API);
       
       const response = await fetch(`${API}/login`, {

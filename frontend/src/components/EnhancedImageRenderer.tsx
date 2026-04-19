@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { extractImageUrls, getSafeImageUrl } from '../utils/imageUtils';
+import { extractImageUrls, getSafeImageUrl, getFallbackImageUrl } from '../utils/imageUtils';
 import './EnhancedImageRenderer.css';
 
 interface ImageData {
@@ -45,6 +45,17 @@ const EnhancedImageRenderer: React.FC<EnhancedImageRendererProps> = ({
     setFailedImages(prev => new Set(prev).add(index));
   };
 
+  const getFallbackUrl = (originalUrl: string): string => {
+    // Try to extract query from original URL for better fallback
+    if (originalUrl.includes('unsplash.com')) {
+      const queryMatch = originalUrl.match(/\?(.+)$/);
+      if (queryMatch && queryMatch[1]) {
+        return getFallbackImageUrl(queryMatch[1]);
+      }
+    }
+    return getFallbackImageUrl('educational-diagram');
+  };
+
   // If no images, return null
   if (allImages.length === 0) {
     return null;
@@ -64,9 +75,12 @@ const EnhancedImageRenderer: React.FC<EnhancedImageRendererProps> = ({
           )}
           
           {failedImages.has(index) ? (
-            <div className="enhanced-image-error">
-              Image failed to load
-            </div>
+            <img
+              src={getFallbackUrl(image.url)}
+              alt={`${image.caption} (Fallback)`}
+              className={`enhanced-image loaded fallback`}
+              onLoad={() => handleImageLoad(index)}
+            />
           ) : (
             <img
               src={image.url}

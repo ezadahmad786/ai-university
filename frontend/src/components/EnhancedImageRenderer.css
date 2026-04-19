@@ -71,3 +71,13 @@
   font-style: italic;
   margin-bottom: 0;
 }
+
+.enhanced-image.fallback {
+  opacity: 0.8;
+  border: 2px dashed #6c757d;
+}
+
+.enhanced-image.fallback:hover {
+  opacity: 1;
+  border-style: solid;
+}

@@ -4,14 +4,17 @@
 
 /**
  * Extract image URLs from text using regex
- * Handles both direct URLs and markdown image syntax
+ * Handles both direct URLs, markdown image syntax, and Unsplash URLs
  */
 export const extractImageUrls = (text: string): string[] => {
-  // Regex to match direct image URLs
+  // Regex to match direct image URLs with file extensions
   const urlRegex = /(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg))/gi;
   
-  // Regex to match markdown image syntax ![alt](url)
-  const markdownRegex = /!\[.*?\]\((https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|svg))\)/gi;
+  // Regex to match markdown image syntax with any URL (including Unsplash)
+  const markdownRegex = /!\[.*?\]\((https?:\/\/[^)]+)\)/gi;
+  
+  // Regex to match Unsplash URLs specifically
+  const unsplashRegex = /https?:\/\/source\.unsplash\.com\/[^)\s]+/gi;
   
   const urls: string[] = [];
   
@@ -26,11 +29,17 @@ export const extractImageUrls = (text: string): string[] => {
   if (markdownMatches) {
     markdownMatches.forEach(match => {
       // Extract URL from markdown syntax
-      const urlMatch = match.match(/\((https?:\/\/.*?)\)/);
+      const urlMatch = match.match(/\((https?:\/\/[^)]+)\)/);
       if (urlMatch && urlMatch[1]) {
         urls.push(urlMatch[1]);
       }
     });
+  }
+  
+  // Extract Unsplash URLs directly
+  const unsplashMatches = text.match(unsplashRegex);
+  if (unsplashMatches) {
+    urls.push(...unsplashMatches);
   }
   
   // Remove duplicates and return
@@ -54,14 +63,30 @@ export const getSafeImageUrl = (url: string): string => {
     new URL(url);
     return url;
   } catch {
-    // If URL is invalid, return empty string
-    return '';
+    // If URL is invalid, return fallback image
+    return 'https://source.unsplash.com/600x400/?educational-diagram';
   }
 };
 
 /**
- * Check if a URL is an image
+ * Check if a URL is an image or Unsplash URL
  */
 export const isImageUrl = (url: string): boolean => {
-  return /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(url);
+  // Check for file extensions
+  if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(url)) {
+    return true;
+  }
+  // Check for Unsplash URLs
+  if (/source\.unsplash\.com/i.test(url)) {
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Get fallback image URL based on query
+ */
+export const getFallbackImageUrl = (query: string = 'educational-diagram'): string => {
+  const cleanQuery = query.replace(/\s+/g, '+');
+  return `https://source.unsplash.com/600x400/?${cleanQuery}`;
 };

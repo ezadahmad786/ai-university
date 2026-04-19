@@ -446,148 +446,10 @@ SUBJECT_PROMPTS = {
 Make learning enjoyable and accessible for any subject or question type.""",
 }
 
-def generate_image_queries(subject: str, message: str, max_images: int = 2) -> list:
-    """Generate intelligent image queries based on subject and message content"""
-    subject_lower = subject.lower()
-    message_lower = message.lower()
-    
-    logger.info(f"=== GENERATING IMAGE QUERIES ===")
-    logger.info(f"Subject: '{subject}'")
-    logger.info(f"Message: '{message}'")
-    logger.info(f"Max images: {max_images}")
-    
-    # Define image query patterns for each subject
-    image_patterns = {
-        'mathematics': [
-            'graph of equation labeled',
-            'geometric diagram labeled',
-            'math formula visualization',
-            'coordinate plane graph',
-            'mathematical concept diagram'
-        ],
-        'physics': [
-            'projectile motion graph',
-            'force diagram labeled',
-            'physics experiment setup',
-            'wave motion diagram',
-            'circuit diagram labeled'
-        ],
-        'chemistry': [
-            'molecule structure diagram',
-            'chemical reaction equation',
-            'periodic table element',
-            'chemistry lab equipment',
-            'atomic structure model'
-        ],
-        'biology': [
-            'human heart diagram labeled',
-            'cell structure diagram',
-            'dna double helix model',
-            'human body system diagram',
-            'plant structure labeled'
-        ],
-        'programming': [
-            'code flowchart diagram',
-            'algorithm visualization',
-            'programming concept diagram',
-            'software architecture diagram',
-            'data structure visualization'
-        ],
-        'computer science': [
-            'computer network diagram',
-            'algorithm flowchart',
-            'database schema diagram',
-            'computer architecture diagram',
-            'operating system concept'
-        ],
-        'english': [
-            'grammar concept diagram',
-            'writing structure chart',
-            'literary concept illustration',
-            'language learning visual',
-            'writing process diagram'
-        ],
-        'arts & humanities': [
-            'historical event painting',
-            'art history timeline',
-            'philosophy concept diagram',
-            'cultural artifact image',
-            'historical document image'
-        ],
-        'general': [
-            'educational concept diagram',
-            'learning visualization',
-            'general knowledge illustration',
-            'concept map diagram',
-            'educational infographic'
-        ]
-    }
-    
-    # Get relevant patterns for the subject
-    patterns = image_patterns.get(subject_lower, image_patterns['general'])
-    
-    # Extract keywords from message to determine relevant images
-    keywords = []
-    
-    # Subject-specific keyword detection
-    if subject_lower == 'mathematics':
-        if any(word in message_lower for word in ['graph', 'equation', 'function']):
-            keywords.append('graph of equation labeled')
-        elif any(word in message_lower for word in ['geometry', 'triangle', 'circle']):
-            keywords.append('geometric diagram labeled')
-        elif any(word in message_lower for word in ['calculus', 'derivative', 'integral']):
-            keywords.append('math formula visualization')
-            
-    elif subject_lower == 'physics':
-        if any(word in message_lower for word in ['motion', 'projectile', 'trajectory']):
-            keywords.append('projectile motion graph')
-        elif any(word in message_lower for word in ['force', 'newton', 'gravity']):
-            keywords.append('force diagram labeled')
-        elif any(word in message_lower for word in ['wave', 'sound', 'light']):
-            keywords.append('wave motion diagram')
-            
-    elif subject_lower == 'chemistry':
-        if any(word in message_lower for word in ['molecule', 'atom', 'bond']):
-            keywords.append('molecule structure diagram')
-        elif any(word in message_lower for word in ['reaction', 'equation', 'chemical']):
-            keywords.append('chemical reaction equation')
-        elif any(word in message_lower for word in ['periodic', 'element', 'atom']):
-            keywords.append('periodic table element')
-            
-    elif subject_lower == 'biology':
-        if any(word in message_lower for word in ['heart', 'circulatory', 'blood']):
-            keywords.append('human heart diagram labeled')
-        elif any(word in message_lower for word in ['cell', 'membrane', 'nucleus']):
-            keywords.append('cell structure diagram')
-        elif any(word in message_lower for word in ['dna', 'genetics', 'heredity']):
-            keywords.append('dna double helix model')
-            
-    elif subject_lower == 'programming':
-        if any(word in message_lower for word in ['algorithm', 'flowchart', 'logic']):
-            keywords.append('code flowchart diagram')
-        elif any(word in message_lower for word in ['structure', 'architecture', 'design']):
-            keywords.append('software architecture diagram')
-        elif any(word in message_lower for word in ['data', 'structure', 'organization']):
-            keywords.append('data structure visualization')
-    
-    # If no specific keywords found, use general patterns
-    if not keywords:
-        keywords = patterns[:max_images]
-    
-    # Generate image objects with queries and captions
-    images = []
-    for i, query in enumerate(keywords[:max_images]):
-        # Generate caption based on query
-        caption = query.replace(' labeled', '').replace(' diagram', '').replace(' graph', '').title()
-        
-        images.append({
-            'query': query,
-            'caption': caption
-        })
-    
-    logger.info(f"Generated images: {images}")
-    logger.info(f"=== END IMAGE GENERATION ===")
-    return images
+def get_image_url(query: str) -> str:
+    """Generate clean Unsplash URL from query"""
+    clean_query = query.replace(" ", "+")
+    return f"https://source.unsplash.com/600x400/?{clean_query}"
 
 def get_system_prompt(subject: str, mode: str = 'simple') -> str:
     """Get the appropriate system prompt based on subject and mode"""
@@ -950,204 +812,165 @@ def chat():
     """Handle chat requests with OpenRouter API integration"""
     logger.info("=== CHAT ENDPOINT CALLED ===")
     
+    # Initialize response variable
+    final_response = ""
+    
     try:
         # Get JSON data from request
         if not request.is_json:
             logger.error("Request is not JSON")
-            return jsonify({
-                "error": "Request must be JSON"
-            }), 400
+            final_response = "Request must be JSON"
+        else:
+            data = request.json
+            message = data.get('message', '').strip()
+            subject = data.get('subject', 'General')
+            mode = data.get('mode', 'simple')  # Default to simple mode
             
-        data = request.json
-        message = data.get('message', '').strip()
-        subject = data.get('subject', 'General')
-        mode = data.get('mode', 'simple')  # Default to simple mode
-        
-        logger.info(f"=== NEW REQUEST ===")
-        logger.info(f"Message: '{message}'")
-        logger.info(f"Subject: '{subject}'")
-        logger.info(f"Mode: '{mode}'")
-        logger.info(f"Message length: {len(message)}")
-        
-        if not message:
-            logger.error("Empty message received")
-            return jsonify({
-                "error": "Message cannot be empty"
-            }), 400
-        
-        # Check if API key is configured
-        if not api_key:
-            logger.error("OpenRouter API key is missing")
-            return jsonify({
-                "error": "API key missing"
-            }), 500
-        
-        # Prepare request to OpenRouter
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "http://localhost:3000",
-            "X-Title": "Ganaie AI University"
-        }
-        
-        # Get dynamic system prompt based on subject and mode
-        system_prompt = get_system_prompt(subject, mode)
-        logger.info(f"Generated system prompt for {subject} in {mode} mode")
-        
-        # Adjust max_tokens based on mode
-        max_tokens = 150 if mode.lower() == 'simple' else 300
-        
-        payload = {
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message}
-            ],
-            "max_tokens": max_tokens,
-            "temperature": 0.3  # Lower temperature for more consistent responses
-        }
-        
-        logger.info(f"Request payload - Max tokens: {max_tokens}, Temperature: 0.3")
-        
-        # Try primary model first, then fallbacks
-        models_to_try = [PRIMARY_MODEL] + FALLBACK_MODELS
-        
-        for model_name in models_to_try:
-            logger.info(f"Trying model: {model_name}")
-            payload["model"] = model_name
+            logger.info(f"=== NEW REQUEST ===")
+            logger.info(f"Message: '{message}'")
+            logger.info(f"Subject: '{subject}'")
+            logger.info(f"Mode: '{mode}'")
+            logger.info(f"Message length: {len(message)}")
             
-            logger.info(f"Sending request to: {OPENROUTER_URL}")
-            logger.info(f"Request payload: {payload}")
-            
-            # Send request to OpenRouter
-            try:
-                response = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=30)
+            if not message:
+                logger.error("Empty message received")
+                final_response = "Message cannot be empty"
+            elif not api_key:
+                logger.error("OpenRouter API key is missing")
+                final_response = "API key missing"
+            else:
+                # Prepare request to OpenRouter
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "http://localhost:3000",
+                    "X-Title": "Ganaie AI University"
+                }
                 
-                logger.info(f"Response status code: {response.status_code}")
-                logger.info(f"Response text: {response.text[:500]}...")
+                # Get dynamic system prompt based on subject and mode
+                system_prompt = get_system_prompt(subject, mode)
+                logger.info(f"Generated system prompt for {subject} in {mode} mode")
                 
-                if response.status_code == 200:
-                    try:
-                        response_data = response.json()
-                        logger.info(f"Response JSON keys: {list(response_data.keys())}")
-                        
-                        # Extract AI response
-                        if 'choices' in response_data and len(response_data['choices']) > 0:
-                            choice = response_data['choices'][0]
-                            logger.info(f"Choice keys: {list(choice.keys())}")
-                            
-                            if 'message' in choice and 'content' in choice['message']:
-                                ai_reply = choice['message']['content'].strip()
-                                word_count = len(ai_reply.split())
-                                char_count = len(ai_reply)
-                                
-                                logger.info(f"=== SUCCESS RESPONSE ===")
-                                logger.info(f"Model: {model_name}")
-                                logger.info(f"Subject: {subject}")
-                                logger.info(f"Mode: {mode}")
-                                logger.info(f"Word count: {word_count}")
-                                logger.info(f"Character count: {char_count}")
-                                logger.info(f"Response preview: {ai_reply[:150]}...")
-                                
-                                # Validate response length
-                                if mode.lower() == 'simple' and word_count > 150:
-                                    logger.warning(f"Simple mode response too long: {word_count} words")
-                                elif mode.lower() == 'detailed' and word_count > 300:
-                                    logger.warning(f"Detailed mode response too long: {word_count} words")
-                                
-                                # Simple image detection logic
-                                question_lower = message.lower()
-                                images = []
-                                
-                                logger.info(f"=== SIMPLE IMAGE DETECTION ===")
-                                logger.info(f"Question: {message}")
-                                logger.info(f"Lower case: {question_lower}")
-                                
-                                if "heart" in question_lower:
-                                    images.append({
-                                        "query": "human heart diagram labeled",
-                                        "caption": "Human Heart"
-                                    })
-                                    logger.info("Added heart image")
-                                elif "cell" in question_lower:
-                                    images.append({
-                                        "query": "animal cell diagram labeled",
-                                        "caption": "Cell Structure"
-                                    })
-                                    logger.info("Added cell image")
-                                elif "force" in question_lower:
-                                    images.append({
-                                        "query": "force diagram physics",
-                                        "caption": "Force Diagram"
-                                    })
-                                    logger.info("Added force image")
-                                elif "graph" in question_lower:
-                                    images.append({
-                                        "query": "math graph example",
-                                        "caption": "Graph Representation"
-                                    })
-                                    logger.info("Added graph image")
-                                elif "molecule" in question_lower:
-                                    images.append({
-                                        "query": "molecule structure diagram",
-                                        "caption": "Molecule Structure"
-                                    })
-                                    logger.info("Added molecule image")
-                                else:
-                                    logger.info("No matching keywords found")
-                                
-                                logger.info(f"Final images array: {images}")
-                                
-                                # Return response in required format with images
-                                return jsonify({
-                                    "text": ai_reply,
-                                    "images": images
-                                })
-                            else:
-                                logger.error("Message or content not found in choice")
-                                continue  # Try next model
-                        else:
-                            logger.error("No choices found in response")
-                            continue  # Try next model
-                    except ValueError as e:
-                        logger.error(f"JSON parsing error: {e}")
-                        continue  # Try next model
-                elif response.status_code == 404:
-                    logger.error(f"Model not found: {model_name} - trying next model")
-                    continue  # Try next model
-                elif response.status_code == 401:
-                    logger.error("Authentication failed - invalid API key")
-                    return jsonify({
-                        "error": "Invalid API key"
-                    }), 401
-                elif response.status_code == 429:
-                    logger.error("Rate limit exceeded")
-                    return jsonify({
-                        "reply": "AI rate limit exceeded. Please try again in a moment."
-                    }), 429
-                elif response.status_code == 400:
-                    logger.error("Bad request - invalid parameters")
-                    return jsonify({
-                        "reply": "Invalid request format to AI service."
-                    }), 400
-                else:
-                    logger.error(f"HTTP Error {response.status_code}: {response.text}")
-                    continue  # Try next model
+                # Adjust max_tokens based on mode
+                max_tokens = 150 if mode.lower() == 'simple' else 300
+                
+                payload = {
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": message}
+                    ],
+                    "max_tokens": max_tokens,
+                    "temperature": 0.3  # Lower temperature for more consistent responses
+                }
+                
+                logger.info(f"Request payload - Max tokens: {max_tokens}, Temperature: 0.3")
+                
+                # Try primary model first, then fallbacks
+                models_to_try = [PRIMARY_MODEL] + FALLBACK_MODELS
+                ai_reply = ""
+                
+                for model_name in models_to_try:
+                    logger.info(f"Trying model: {model_name}")
+                    payload["model"] = model_name
                     
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Request to OpenRouter failed for {model_name}: {e}")
-                continue  # Try next model
-        
-        # If all models failed
-        logger.error("All models failed")
-        return jsonify({
-            "reply": "AI service is temporarily unavailable. Please try again later."
-        })
-            
+                    logger.info(f"Sending request to: {OPENROUTER_URL}")
+                    
+                    # Send request to OpenRouter
+                    try:
+                        response = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=30)
+                        
+                        logger.info(f"Response status code: {response.status_code}")
+                        
+                        if response.status_code == 200:
+                            try:
+                                response_data = response.json()
+                                
+                                # Extract AI response
+                                if 'choices' in response_data and len(response_data['choices']) > 0:
+                                    choice = response_data['choices'][0]
+                                    
+                                    if 'message' in choice and 'content' in choice['message']:
+                                        ai_reply = choice['message']['content'].strip()
+                                        word_count = len(ai_reply.split())
+                                        char_count = len(ai_reply)
+                                        
+                                        logger.info(f"=== SUCCESS RESPONSE ===")
+                                        logger.info(f"Model: {model_name}")
+                                        logger.info(f"Subject: {subject}")
+                                        logger.info(f"Mode: {mode}")
+                                        logger.info(f"Word count: {word_count}")
+                                        logger.info(f"Character count: {char_count}")
+                                        logger.info(f"Response preview: {ai_reply[:150]}...")
+                                        
+                                        # Validate response length
+                                        if mode.lower() == 'simple' and word_count > 150:
+                                            logger.warning(f"Simple mode response too long: {word_count} words")
+                                        elif mode.lower() == 'detailed' and word_count > 300:
+                                            logger.warning(f"Detailed mode response too long: {word_count} words")
+                                        
+                                        break  # Success, exit loop
+                                    else:
+                                        logger.error("Message or content not found in choice")
+                                        continue  # Try next model
+                                else:
+                                    logger.error("No choices found in response")
+                                    continue  # Try next model
+                            except ValueError as e:
+                                logger.error(f"JSON parsing error: {e}")
+                                continue  # Try next model
+                        elif response.status_code == 401:
+                            logger.error("Authentication failed - invalid API key")
+                            final_response = "API authentication failed. Please check the API key."
+                            break
+                        elif response.status_code == 429:
+                            logger.error("Rate limit exceeded")
+                            final_response = "AI rate limit exceeded. Please try again in a moment."
+                            break
+                        elif response.status_code == 400:
+                            logger.error("Bad request - invalid parameters")
+                            final_response = "Invalid request format to AI service."
+                            break
+                        else:
+                            logger.error(f"HTTP Error {response.status_code}: {response.text}")
+                            continue  # Try next model
+                            
+                    except requests.exceptions.RequestException as e:
+                        logger.error(f"Request to OpenRouter failed for {model_name}: {e}")
+                        continue  # Try next model
+                
+                # If all models failed and no response was set
+                if not ai_reply and not final_response:
+                    logger.error("All models failed")
+                    final_response = "AI service is temporarily unavailable. Please try again later."
+                elif ai_reply:
+                    # Simple image detection and generation
+                    question_lower = message.lower()
+                    
+                    logger.info(f"=== CLEAN IMAGE GENERATION ===")
+                    logger.info(f"Question: {message}")
+                    
+                    # Detect if user asks for image/diagram/show/structure
+                    if any(keyword in question_lower for keyword in ["diagram", "image", "show", "structure"]):
+                        # Generate image URL based on user query
+                        image_url = get_image_url(message)
+                        logger.info(f"Generated image URL: {image_url}")
+                        
+                        # Append image to AI response text using Markdown format
+                        final_response = ai_reply + f"\n\n![Image]({image_url})"
+                        logger.info("Added image to response")
+                    else:
+                        final_response = ai_reply
+                        logger.info("No image keywords detected")
+                        
     except Exception as e:
         logger.error(f"Unexpected error in chat endpoint: {e}")
-        return jsonify({
-            "error": "An unexpected error occurred. Please try again."
-        }), 500
+        final_response = "An unexpected error occurred. Please try again."
+    
+    # ONLY ONE RETURN STATEMENT
+    print("FINAL RESPONSE SENT:", final_response)
+    return jsonify({
+        "response": final_response
+    })
 
 @app.route('/quiz', methods=['POST'])
 def generate_quiz():

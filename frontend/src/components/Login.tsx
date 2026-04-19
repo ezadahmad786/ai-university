@@ -18,7 +18,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onToggleMode }) => {
     setIsLoading(true);
 
     try {
-      const apiUrl = `${import.meta.env.VITE_API_URL}/login`;
+      const API = import.meta.env.VITE_API_URL;
+      console.log("API URL:", API);
+      const apiUrl = `${API}/login`;
       console.log('API URL for login:', apiUrl);
       
       const response = await fetch(apiUrl, {

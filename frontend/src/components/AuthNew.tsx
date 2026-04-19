@@ -19,8 +19,10 @@ const AuthNew: React.FC<AuthNewProps> = ({ onAuthSuccess, mode, onToggleMode }) 
     setIsLoading(true);
 
     try {
+      const API = import.meta.env.VITE_API_URL;
+      console.log("API URL:", API);
       const endpoint = mode === 'login' ? '/login' : '/register';
-      const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
+      const response = await fetch(`${API}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

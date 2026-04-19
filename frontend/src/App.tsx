@@ -80,7 +80,9 @@ function App() {
 
     try {
       // Send message to backend API
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
+      const API = import.meta.env.VITE_API_URL;
+      console.log("API URL:", API);
+      const response = await fetch(`${API}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

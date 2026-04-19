@@ -32,7 +32,9 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onToggleMode }) => {
     setIsLoading(true);
 
     try {
-      const apiUrl = `${import.meta.env.VITE_API_URL}/register`;
+      const API = import.meta.env.VITE_API_URL;
+      console.log("API URL:", API);
+      const apiUrl = `${API}/register`;
       console.log('API URL for registration:', apiUrl);
       
       const response = await fetch(apiUrl, {
@@ -67,7 +69,9 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onToggleMode }) => {
 
       if (response.ok) {
         // Auto-login after successful registration
-        const loginApiUrl = `${import.meta.env.VITE_API_URL}/login`;
+        const API = import.meta.env.VITE_API_URL;
+        console.log("API URL:", API);
+        const loginApiUrl = `${API}/login`;
         console.log('API URL for auto-login:', loginApiUrl);
         
         const loginResponse = await fetch(loginApiUrl, {

@@ -44,7 +44,9 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({ subject, onBackToChat }) 
     setUserAnswers({});
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/quiz`, {
+      const API = import.meta.env.VITE_API_URL;
+      console.log("API URL:", API);
+      const response = await fetch(`${API}/quiz`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +131,9 @@ const QuizGenerator: React.FC<QuizGeneratorProps> = ({ subject, onBackToChat }) 
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/save-quiz`, {
+      const API = import.meta.env.VITE_API_URL;
+      console.log("API URL:", API);
+      const response = await fetch(`${API}/save-quiz`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

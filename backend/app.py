@@ -519,6 +519,57 @@ def generate_diagram_url(topic: str, subject: str = "general") -> str:
     
     return f"https://source.unsplash.com/600x400/?{query}"
 
+def extract_topic_from_message(message: str) -> str:
+    """Extract relevant topic from user message for image generation"""
+    message_lower = message.lower()
+    
+    # Common topic mappings
+    topic_keywords = {
+        'heart': 'heart',
+        'brain': 'brain',
+        'atom': 'atom',
+        'molecule': 'molecule',
+        'cell': 'cell',
+        'dna': 'dna',
+        'photosynthesis': 'photosynthesis',
+        'gravity': 'gravity',
+        'electricity': 'electricity',
+        'magnetism': 'magnetism',
+        'light': 'light',
+        'energy': 'energy',
+        'force': 'force',
+        'geometry': 'geometry',
+        'graph': 'graph',
+        'equation': 'equation',
+        'calculus': 'calculus',
+        'solar system': 'solar-system',
+        'earth': 'earth',
+        'water cycle': 'water-cycle',
+        'ecosystem': 'ecosystem',
+        'algorithm': 'algorithm',
+        'database': 'database',
+        'network': 'network',
+        'human body': 'human-body',
+        'skeleton': 'skeleton',
+        'muscle': 'muscle',
+        'periodic table': 'periodic-table',
+        'chemical reaction': 'chemical-reaction'
+    }
+    
+    # Find matching topic
+    for keyword, topic in topic_keywords.items():
+        if keyword in message_lower:
+            return topic
+    
+    # Fallback: try to extract first meaningful word
+    words = message_lower.split()
+    for word in words:
+        if len(word) > 3 and word not in ['draw', 'show', 'make', 'create', 'give', 'tell', 'explain', 'what', 'how', 'why', 'when', 'where', 'can', 'could', 'would', 'should', 'will', 'does', 'do', 'did', 'are', 'is', 'am', 'was', 'were', 'been', 'being', 'have', 'has', 'had', 'having', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under', 'again', 'further', 'then', 'once']:
+            return word
+    
+    # Ultimate fallback
+    return "science"
+
 def get_system_prompt(subject: str, mode: str = 'simple') -> str:
     """Get the appropriate system prompt based on subject and mode"""
     subject_lower = subject.lower()
@@ -568,16 +619,19 @@ FORMATTING RULES:
     # Add diagram instructions
     diagram_instructions = """
     
-DIAGRAM REQUIREMENTS:
-- If the user asks for a diagram, chart, image, or visual representation, ALWAYS include a real Unsplash URL
-- Format: ![diagram](https://source.unsplash.com/600x400/?{relevant-query})
-- Examples:
-  * Heart diagram: ![diagram](https://source.unsplash.com/600x400/?human-heart,biology,anatomy)
-  * Atom structure: ![diagram](https://source.unsplash.com/600x400/?atom,chemistry,science)
-  * Photosynthesis: ![diagram](https://source.unsplash.com/600x400/?photosynthesis,biology,plants)
-- NEVER return empty image syntax like ![Image] or ![diagram]
+CRITICAL DIAGRAM REQUIREMENTS:
+- If the user asks for a diagram, draw, image, or visual representation, YOU MUST include a real image URL
+- ALWAYS use this exact format: ![diagram](https://source.unsplash.com/600x400/?{topic})
+- NEVER return empty image syntax like ![Image] or ![diagram] without a URL
+- NEVER return broken or placeholder URLs
 - ALWAYS include a working Unsplash URL with relevant search terms
-- Use the format ![diagram](https://source.unsplash.com/600x400/?{topic},{subject},diagram)"""
+
+Examples:
+* Heart diagram: ![diagram](https://source.unsplash.com/600x400/?heart,biology,anatomy)
+* Atom structure: ![diagram](https://source.unsplash.com/600x400/?atom,chemistry,science)
+* Photosynthesis: ![diagram](https://source.unsplash.com/600x400/?photosynthesis,biology,plants)
+
+MANDATORY: Your response MUST contain a valid image URL when user requests diagrams, draws, or images."""
     
     # Add learning experience enhancements
     learning_enhancement = """
@@ -1025,20 +1079,33 @@ def chat():
                     logger.error("All models failed")
                     final_response = "AI service is temporarily unavailable. Please try again later."
                 elif ai_reply:
-                    # Simple image detection and generation
+                    # Enhanced image detection and generation
                     question_lower = message.lower()
                     
-                    logger.info(f"=== CLEAN IMAGE GENERATION ===")
+                    logger.info(f"=== ENHANCED IMAGE GENERATION ===")
                     logger.info(f"Question: {message}")
                     
-                    # Specific logic for diagram requests
-                    if "diagram" in question_lower:
-                        image_url = "https://source.unsplash.com/600x400/?human-heart,biology"
-                        final_response = ai_reply + f"\n\n![diagram]({image_url})"
-                        logger.info("Added diagram to response")
+                    # Detect if user asks for image/diagram/draw
+                    image_keywords = ["diagram", "draw", "image"]
+                    requires_image = any(keyword in question_lower for keyword in image_keywords)
+                    
+                    if requires_image:
+                        # Check if AI already included an image in markdown format
+                        if "![diagram](" in ai_reply or "![image](" in ai_reply or "![(" in ai_reply:
+                            # AI already included an image, use as-is
+                            final_response = ai_reply
+                            logger.info("AI already included image in response")
+                        else:
+                            # AI didn't include image, append fallback image
+                            # Generate topic-based URL
+                            topic = extract_topic_from_message(message)
+                            image_url = f"https://source.unsplash.com/600x400/?{topic},diagram"
+                            
+                            final_response = ai_reply + f"\n\n![diagram]({image_url})"
+                            logger.info(f"Appended fallback image: {image_url}")
                     else:
                         final_response = ai_reply
-                        logger.info("No diagram keyword detected")
+                        logger.info("No image keywords detected")
                         
     except Exception as e:
         logger.error(f"Unexpected error in chat endpoint: {e}")

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import { API_BASE_URL } from './config';
 import MarkdownRenderer from './components/MarkdownRenderer';
 import QuizGenerator from './components/QuizGenerator';
 import Login from './components/Login';
@@ -80,9 +81,8 @@ function App() {
 
     try {
       // Send message to backend API
-      const API = import.meta.env.VITE_API_URL;
-      console.log("API URL:", API);
-      const response = await fetch(`${API}/chat`, {
+      console.log("API URL:", API_BASE_URL);
+      const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

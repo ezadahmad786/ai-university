@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './AuthNew.css';
+import { API_BASE_URL } from '../config';
 
 interface AuthNewProps {
   onAuthSuccess: (token: string, user: any) => void;
@@ -19,10 +20,9 @@ const AuthNew: React.FC<AuthNewProps> = ({ onAuthSuccess, mode, onToggleMode }) 
     setIsLoading(true);
 
     try {
-      const API = import.meta.env.VITE_API_URL;
-      console.log("API URL:", API);
+      console.log("API URL:", API_BASE_URL);
       const endpoint = mode === 'login' ? '/login' : '/register';
-      const response = await fetch(`${API}${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

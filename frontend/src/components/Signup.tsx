@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Auth.css';
+import { API_BASE_URL } from '../config';
 
 interface SignupProps {
   onSignup: (token: string, user: any) => void;
@@ -32,9 +33,8 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onToggleMode }) => {
     setIsLoading(true);
 
     try {
-      const API = import.meta.env.VITE_API_URL;
-      console.log("API URL:", API);
-      const apiUrl = `${API}/register`;
+      console.log("API URL:", API_BASE_URL);
+      const apiUrl = `${API_BASE_URL}/register`;
       console.log('API URL for registration:', apiUrl);
       
       const response = await fetch(apiUrl, {
@@ -69,9 +69,8 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onToggleMode }) => {
 
       if (response.ok) {
         // Auto-login after successful registration
-        const API = import.meta.env.VITE_API_URL;
-        console.log("API URL:", API);
-        const loginApiUrl = `${API}/login`;
+        console.log("API URL:", API_BASE_URL);
+        const loginApiUrl = `${API_BASE_URL}/login`;
         console.log('API URL for auto-login:', loginApiUrl);
         
         const loginResponse = await fetch(loginApiUrl, {

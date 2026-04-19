@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Auth.css';
+import { API_BASE_URL } from '../config';
 
 interface LoginProps {
   onLogin: (token: string, user: any) => void;
@@ -18,9 +19,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, onToggleMode }) => {
     setIsLoading(true);
 
     try {
-      const API = import.meta.env.VITE_API_URL;
-      console.log("API URL:", API);
-      const apiUrl = `${API}/login`;
+      console.log("API URL:", API_BASE_URL);
+      const apiUrl = `${API_BASE_URL}/login`;
       console.log('API URL for login:', apiUrl);
       
       const response = await fetch(apiUrl, {

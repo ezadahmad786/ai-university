@@ -7,7 +7,7 @@ import QuizGenerator from './components/QuizGenerator';
 import './components/Quiz.css';
 import './components/AuthNew.css';
 import './components/Dashboard.css';
-import { API_BASE_URL } from './config';
+// Removed API_BASE_URL import - using direct environment variable
 
 // Type definitions for our chat messages
 interface Message {
@@ -79,7 +79,10 @@ function AppAuth() {
     setInputText('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const API = import.meta.env.VITE_API_URL;
+      console.log("API URL for login:", API);
+      
+      const response = await fetch(`${API}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

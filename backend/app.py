@@ -450,9 +450,74 @@ Make learning enjoyable and accessible for any subject or question type.""",
 }
 
 def get_image_url(query: str) -> str:
-    """Generate clean Unsplash URL from query"""
+    """Generate a clean Unsplash URL for image queries"""
     clean_query = query.replace(" ", "+")
     return f"https://source.unsplash.com/600x400/?{clean_query}"
+
+def generate_diagram_url(topic: str, subject: str = "general") -> str:
+    """Generate relevant Unsplash URL for diagram requests based on topic and subject"""
+    topic_lower = topic.lower()
+    subject_lower = subject.lower()
+    
+    # Mapping of common diagram topics to relevant Unsplash queries
+    diagram_mapping = {
+        # Biology
+        'heart': 'human-heart,biology,anatomy',
+        'brain': 'human-brain,biology,anatomy',
+        'cell': 'cell,biology,microscope',
+        'dna': 'dna,biology,genetics',
+        'photosynthesis': 'photosynthesis,biology,plants',
+        'human body': 'human-body,biology,anatomy',
+        'skeleton': 'skeleton,biology,anatomy',
+        'muscle': 'muscle,biology,anatomy',
+        
+        # Chemistry
+        'atom': 'atom,chemistry,science',
+        'molecule': 'molecule,chemistry,science',
+        'periodic table': 'periodic-table,chemistry,elements',
+        'chemical reaction': 'chemical-reaction,chemistry,lab',
+        'bond': 'chemical-bond,chemistry,molecules',
+        
+        # Physics
+        'gravity': 'gravity,physics,space',
+        'electricity': 'electricity,physics,circuits',
+        'magnetism': 'magnetism,physics,magnets',
+        'light': 'light,physics,optics',
+        'energy': 'energy,physics,science',
+        'force': 'force,physics,mechanics',
+        
+        # Mathematics
+        'geometry': 'geometry,math,shapes',
+        'graph': 'graph,math,coordinates',
+        'equation': 'equation,math,algebra',
+        'calculus': 'calculus,math,functions',
+        
+        # General Science
+        'solar system': 'solar-system,space,planets',
+        'earth': 'earth,geography,planet',
+        'water cycle': 'water-cycle,weather,science',
+        'ecosystem': 'ecosystem,nature,environment',
+        
+        # Computer Science
+        'algorithm': 'algorithm,programming,code',
+        'database': 'database,programming,tech',
+        'network': 'network,computer,technology'
+    }
+    
+    # Try to find exact match
+    if topic_lower in diagram_mapping:
+        query = diagram_mapping[topic_lower]
+    else:
+        # Try partial matching
+        for key, value in diagram_mapping.items():
+            if key in topic_lower:
+                query = value
+                break
+        else:
+            # Fallback to topic + subject
+            query = f"{topic},{subject},diagram"
+    
+    return f"https://source.unsplash.com/600x400/?{query}"
 
 def get_system_prompt(subject: str, mode: str = 'simple') -> str:
     """Get the appropriate system prompt based on subject and mode"""
@@ -500,6 +565,20 @@ FORMATTING RULES:
 - Include relevant examples where needed
 - Maintain consistent structure throughout"""
     
+    # Add diagram instructions
+    diagram_instructions = """
+    
+DIAGRAM REQUIREMENTS:
+- If the user asks for a diagram, chart, image, or visual representation, ALWAYS include a real Unsplash URL
+- Format: ![diagram](https://source.unsplash.com/600x400/?{relevant-query})
+- Examples:
+  * Heart diagram: ![diagram](https://source.unsplash.com/600x400/?human-heart,biology,anatomy)
+  * Atom structure: ![diagram](https://source.unsplash.com/600x400/?atom,chemistry,science)
+  * Photosynthesis: ![diagram](https://source.unsplash.com/600x400/?photosynthesis,biology,plants)
+- NEVER return empty image syntax like ![Image] or ![diagram]
+- ALWAYS include a working Unsplash URL with relevant search terms
+- Use the format ![diagram](https://source.unsplash.com/600x400/?{topic},{subject},diagram)"""
+    
     # Add learning experience enhancements
     learning_enhancement = """
     
@@ -522,7 +601,7 @@ RESPONSE GUIDELINES:
 - Ensure all information is accurate and helpful
 - Make learning engaging and interactive"""
     
-    return f"{base_prompt}{mode_instruction}{formatting_rules}{learning_enhancement}{response_guidelines}\n\nCurrent subject: {subject.title()}\nResponse mode: {mode.title()}"
+    return f"{base_prompt}{mode_instruction}{formatting_rules}{diagram_instructions}{learning_enhancement}{response_guidelines}\n\nCurrent subject: {subject.title()}\nResponse mode: {mode.title()}"
 
 # Authentication Routes
 @app.route('/register', methods=['POST'])

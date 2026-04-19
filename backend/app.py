@@ -72,13 +72,8 @@ def get_db_connection():
 
 init_db()
 
-# Configure CORS to allow requests from frontend (development and production)
-cors_origins = [
-    'http://localhost:3000', 
-    'http://127.0.0.1:3000',
-    'https://ganaie-ai-university.vercel.app'
-]
-CORS(app, origins=cors_origins)
+# Configure CORS to allow requests from any domain
+CORS(app, origins="*", allow_headers=["Content-Type", "Authorization"])
 
 # Initialize OpenRouter API key with detailed debugging
 api_key = os.getenv('OPENROUTER_API_KEY')

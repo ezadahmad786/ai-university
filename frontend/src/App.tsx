@@ -17,6 +17,10 @@ interface Message {
   text: string;
   sender: 'user' | 'ai';
   timestamp: Date;
+  images?: Array<{
+    query: string;
+    caption: string;
+  }>;
 }
 
 // Subject options for the dropdown
@@ -95,14 +99,20 @@ function App() {
       });
 
       const data = await response.json();
+      
+      // Debug: Log the full response
+      console.log('API Response:', data);
+      console.log('Images in response:', data.images);
 
       if (response.ok) {
         const aiMessage: Message = {
           id: Date.now() + 1,
-          text: data.reply,
+          text: data.text || data.reply, // Handle both new and old response formats
           sender: 'ai',
-          timestamp: new Date()
+          timestamp: new Date(),
+          images: data.images || []
         };
+        console.log('Created AI message:', aiMessage);
         setMessages(prev => [...prev, aiMessage]);
       } else {
         // Handle error response
@@ -226,7 +236,24 @@ function App() {
                     >
                       <div className="message-content">
                         {message.sender === 'ai' ? (
-                          <MarkdownRenderer content={message.text} />
+                          <>
+                            <MarkdownRenderer content={message.text} />
+                            {console.log('Rendering AI message images:', message.images)}
+                            {message.images && message.images.map((img, index) => (
+                              <div key={index} style={{ marginTop: "10px" }}>
+                                <img
+                                  src={`https://source.unsplash.com/600x400/?${img.query}`}
+                                  alt={img.caption}
+                                  style={{
+                                    width: "100%",
+                                    borderRadius: "10px",
+                                    marginTop: "10px"
+                                  }}
+                                />
+                                <p>{img.caption}</p>
+                              </div>
+                            ))}
+                          </>
                         ) : (
                           <div className="user-text">{message.text}</div>
                         )}

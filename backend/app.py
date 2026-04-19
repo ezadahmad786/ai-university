@@ -22,6 +22,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Enable CORS for all routes
+CORS(app)
+
 # JWT Configuration
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False  # Tokens don't expire for demo

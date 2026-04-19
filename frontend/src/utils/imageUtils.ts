@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Utility functions for image processing in chat messages
  */

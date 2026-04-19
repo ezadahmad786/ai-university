@@ -19,10 +19,6 @@ interface Message {
   text: string;
   sender: 'user' | 'ai';
   timestamp: Date;
-  images?: Array<{
-    query: string;
-    caption: string;
-  }>;
 }
 
 // Subject options for the dropdown
@@ -71,7 +67,7 @@ function App() {
 
   // Handle sending message to backend
   const sendMessage = async () => {
-    if (!inputText.trim()) return; // Don't send empty messages
+    if (!inputText.trim()) return;
 
     const userMessage: Message = {
       id: Date.now(),
@@ -102,25 +98,38 @@ function App() {
 
       const data = await response.json();
       
-      // Debug: Log the full response
+      // Debug: Log full response
       console.log('API Response:', data);
-      console.log('Images in response:', data.images);
 
-      if (response.ok) {
+      if (response.ok && data) {
+        // Handle new response format: {"response": "text"}
+        const responseText = data.response || data.text || data.reply || 'No response received';
+        
+        if (!responseText) {
+          console.error('Empty response received:', data);
+          setMessages(prev => [...prev, {
+            id: Date.now() + 1,
+            text: 'Error: Received empty response from server',
+            sender: 'ai',
+            timestamp: new Date()
+          }]);
+          return;
+        }
+
         const aiMessage: Message = {
           id: Date.now() + 1,
-          text: data.text || data.reply, // Handle both new and old response formats
+          text: responseText,
           sender: 'ai',
-          timestamp: new Date(),
-          images: data.images || []
+          timestamp: new Date()
         };
         console.log('Created AI message:', aiMessage);
         setMessages(prev => [...prev, aiMessage]);
       } else {
         // Handle error response
+        const errorText = data?.error || data?.message || 'Failed to get response';
         const errorMessage: Message = {
           id: Date.now() + 1,
-          text: `Error: ${data.error || 'Failed to get response'}`,
+          text: `Error: ${errorText}`,
           sender: 'ai',
           timestamp: new Date()
         };
@@ -128,6 +137,7 @@ function App() {
       }
     } catch (error) {
       // Handle network error
+      console.error('Network error:', error);
       const errorMessage: Message = {
         id: Date.now() + 1,
         text: 'Error: Could not connect to the server. Please check if the backend is running.',
@@ -146,6 +156,22 @@ function App() {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  // Safe image extraction function
+  const extractImageUrl = (text: string): string => {
+    if (!text) return "https://source.unsplash.com/600x400/?education";
+    
+    try {
+      const match = text.match(/\!\[.*?\]\((.*?)\)/);
+      if (match && match[1] && match[1].startsWith("http")) {
+        return match[1];
+      }
+    } catch (e) {
+      console.error("Image extraction error:", e);
+    }
+    
+    return "https://source.unsplash.com/600x400/?education";
   };
 
   const handleQuizMode = () => {

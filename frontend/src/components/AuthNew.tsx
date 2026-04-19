@@ -20,7 +20,7 @@ const AuthNew: React.FC<AuthNewProps> = ({ onAuthSuccess, mode, onToggleMode }) 
 
     try {
       const endpoint = mode === 'login' ? '/login' : '/register';
-      const response = await fetch(`${process.env.NODE_ENV === 'production' ? 'https://ganaie-ai-university.onrender.com' : 'http://127.0.0.1:5000'}${endpoint}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
